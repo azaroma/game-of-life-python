@@ -90,7 +90,6 @@ class Cell(QWidget):
         self.label.setStyleSheet("QLabel {background-color: black}")
         self.alive = False
         self.neighbors = []
-        self.willChange = False
 
     def set_neighbors(self, neighbors):
         """ You don't pick your neighbors """
@@ -101,6 +100,19 @@ class Cell(QWidget):
         """ Are you alive? """
         
         return self.alive
+
+    def die(self):
+        if self.is_alive():
+            self.alive = False
+            self.label.setStyleSheet("QLabel {background-color: black}")
+
+    def resurrect(self):
+        if !self.is_alive():
+            self.alive = True
+            self.label.setStyleSheet("QLabel {background-color: white}")
+
+    def stay(self):
+        pass
 
     def poll_neighbors(self):
         """ Ask your neighbors if they are alive """
