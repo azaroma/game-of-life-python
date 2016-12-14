@@ -52,4 +52,5 @@ class Grid(QWidget):
                 cell = self.cells[r][c]
                 cell.setStyleSheet("QLabel {background-color: black}")
                 grid_layout.addWidget(cell, r, c)
+        grid_layout.setSpacing(1)
         self.setLayout(grid_layout)
