@@ -93,10 +93,21 @@ class Cell(QWidget):
         self.willChange = False
 
     def set_neighbors(self, neighbors):
+        """ You don't pick your neighbors """
+        
         self.neighbors = neighbors
 
     def is_alive(self):
+        """ Are you alive? """
+        
         return self.alive
 
     def poll_neighbors(self):
-        pass
+        """ Ask your neighbors if they are alive """
+        
+        alive = 0
+        for neigh in self.neighbors:
+            if neigh.isAlive():
+                alive += 1
+
+            return (alive,)
