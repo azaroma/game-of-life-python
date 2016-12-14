@@ -28,16 +28,39 @@ class Earth(QMainWindow):
         rect.moveCenter(center_point)
         self.move(rect.topLeft())
 
+class Cell(QWidget):
+
+    def __init__(self):
+        super().__init__()
+        self.label = QLabel()
+        self.label.setStyleSheet("QLabel {background-color: black}")
+        self.alive = False
+        self.neighbors = []
+        self.willChange = False
+
+    def set_neighbors(self, neighbors):
+        self.neighbors = neighbors
+
+    def is_alive(self):
+        return self.alive
+
+    def poll_neighbors(self):
+        pass
+
 class Grid(QWidget):
     """ Container of cells. """
 
     def __init__(self, height, width):
         super().__init__()
         cell_size = 10
-        rows_index = range(int(height / cell_size))
-        cols_index = range(int(width / cell_size))
+        self.rows = int(height / cell_size)
+        self.cols = int(width / cell_size)
+        rows_index = range(self.rows)
+        cols_index = range(self.cols)
         
-        self.cells = [[QLabel() for c in cols_index] for r in rows_index]
+        self.cells = [[Cell() for c in cols_index]
+                      for r in rows_index]
+        ((self.make_neighbors(r, c) for c in cols_index) for r in rows_index)
         self.setup_layout()
 
     def get_cell(self, row, col):
@@ -50,7 +73,30 @@ class Grid(QWidget):
         for r, row in enumerate(self.cells):
             for c, col in enumerate(self.cells[r]):
                 cell = self.cells[r][c]
-                cell.setStyleSheet("QLabel {background-color: black}")
-                grid_layout.addWidget(cell, r, c)
+                grid_layout.addWidget(cell.label, r, c)
         grid_layout.setSpacing(1)
         self.setLayout(grid_layout)
+
+    def make_neighbors(self, r, c):
+        """Determine neighbors clockwise starting from upper left 
+        """
+
+        neighbors = [None for n in range(8)]
+        if r - 1 >= 0 and c - 1 >= 0:
+            neighbors[0] = self.cells[r - 1][c - 1]
+        if r - 1 >= 0:
+            neighbors[1] = self.cells[r - 1][c]
+        if r - 1 >= 0 and c + 1 <= self.cols:
+            neighbors[2] = self.cells[r - 1][c + 1]
+        if c + 1 <= self.cols:
+            neighbors[3] = self.cells[r][c + 1]
+        if r + 1 <= self.rows and c + 1 <= self.cols:
+            neighbors[4] = self.cells[r + 1][c + 1]
+        if r + 1 <= self.rows:
+            neighbors[5] = self.cells[r + 1][c]
+        if r + 1 <= self.rows and c - 1 >= 0:
+            neighbors[6] = self.cells[r + 1][c - 1]
+        if c - 1 >= 0:
+            neighbors[7] = self.cells[r][c - 1]
+                
+        return neighbors
