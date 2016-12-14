@@ -120,7 +120,7 @@ class Earth(QMainWindow):
                 'penta': []
             },
             'ship': {
-                'glider': [],
+                'glider': [(18,30),(19,31),(20,31),(20,30),(20,29)],
                 'lwss': []
             }
         }
