@@ -7,10 +7,14 @@ class Earth(QMainWindow):
     of time.
     """
 
-    def __init__(self):
+    def __init__(self, god):
         """ Set the initial state of this planet. """
         
         super().__init__()
+        self.god = god
+        self.timer = QBasicTimer()
+        self.timer.timeout.connect(ask_god)
+        self.timer.start(1000, self)
         self.resize(800, 400)
         self.center()
         self.setWindowTitle("Planet Earth")
@@ -27,6 +31,9 @@ class Earth(QMainWindow):
         center_point = QDesktopWidget().availableGeometry().center()
         rect.moveCenter(center_point)
         self.move(rect.topLeft())
+
+    def ask_god(self):
+        self.god.judge(self.cells)
 
 class Grid(QWidget):
     """ Container of cells. """
@@ -107,7 +114,7 @@ class Cell(QWidget):
             self.label.setStyleSheet("QLabel {background-color: black}")
 
     def resurrect(self):
-        if !self.is_alive():
+        if not self.is_alive():
             self.alive = True
             self.label.setStyleSheet("QLabel {background-color: white}")
 
