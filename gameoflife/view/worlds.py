@@ -1,3 +1,4 @@
+from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import (QMainWindow, QDesktopWidget, QLabel, QWidget,
                              QGridLayout)
 
@@ -12,16 +13,17 @@ class Earth(QMainWindow):
         
         super().__init__()
         self.god = god
-        self.timer = QBasicTimer()
-        self.timer.timeout.connect(ask_god)
-        self.timer.start(1000, self)
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.ask_god)
+
         self.resize(800, 400)
         self.center()
         self.setWindowTitle("Planet Earth")
 
         self.grid = Grid(self.height(), self.width())
         self.setCentralWidget(self.grid)
-        
+
+        self.timer.start(1000)
         self.show()
 
     def center(self):
@@ -33,7 +35,7 @@ class Earth(QMainWindow):
         self.move(rect.topLeft())
 
     def ask_god(self):
-        self.god.judge(self.cells)
+        self.god.judge(self.grid.get_cells())
 
 class Grid(QWidget):
     """ Container of cells. """
@@ -50,6 +52,9 @@ class Grid(QWidget):
                       for r in rows_index]
         ((self.make_neighbors(r, c) for c in cols_index) for r in rows_index)
         self.setup_layout()
+
+    def get_cells(self):
+        return self.cells
 
     def get_cell(self, row, col):
         return self.cells[row][col]
@@ -129,4 +134,4 @@ class Cell(QWidget):
             if neigh.isAlive():
                 alive += 1
 
-            return (alive,)
+        return alive

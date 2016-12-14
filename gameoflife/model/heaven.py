@@ -7,14 +7,15 @@ class God(object):
         super().__init__()
 
     def judge(self, cells):
+        """Subject every cell to your mighty judgement. """
         for row in cells:
             for cell in row:
-                judge_cell(cell)
+                self.judge_cell(cell)
 
     def judge_cell(self, cell):
         """Apply the inevitable rules of life and touch cells. """
         
-        alive = cell.poll_neighbors()[0]
+        alive = cell.poll_neighbors()
         if alive < 2:
             cell.die()
         elif alive > 3:
