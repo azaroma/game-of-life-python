@@ -11,7 +11,7 @@ class Earth(QMainWindow):
         """ Set the initial state of this planet. """
         
         super().__init__()
-        self.resize(400, 400)
+        self.resize(800, 400)
         self.center()
         self.setWindowTitle("Planet Earth")
 
@@ -27,25 +27,6 @@ class Earth(QMainWindow):
         center_point = QDesktopWidget().availableGeometry().center()
         rect.moveCenter(center_point)
         self.move(rect.topLeft())
-
-class Cell(QWidget):
-
-    def __init__(self):
-        super().__init__()
-        self.label = QLabel()
-        self.label.setStyleSheet("QLabel {background-color: black}")
-        self.alive = False
-        self.neighbors = []
-        self.willChange = False
-
-    def set_neighbors(self, neighbors):
-        self.neighbors = neighbors
-
-    def is_alive(self):
-        return self.alive
-
-    def poll_neighbors(self):
-        pass
 
 class Grid(QWidget):
     """ Container of cells. """
@@ -100,3 +81,22 @@ class Grid(QWidget):
             neighbors[7] = self.cells[r][c - 1]
                 
         return neighbors
+
+class Cell(QWidget):
+
+    def __init__(self):
+        super().__init__()
+        self.label = QLabel()
+        self.label.setStyleSheet("QLabel {background-color: black}")
+        self.alive = False
+        self.neighbors = []
+        self.willChange = False
+
+    def set_neighbors(self, neighbors):
+        self.neighbors = neighbors
+
+    def is_alive(self):
+        return self.alive
+
+    def poll_neighbors(self):
+        pass
