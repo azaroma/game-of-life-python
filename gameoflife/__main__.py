@@ -12,7 +12,7 @@ def main(args=None):
     print("Life starts thriving...")
     life = QApplication(sys.argv)
     god = heaven.God()
-    world = worlds.Earth(god, [(20,20),(20,21),(20,22)])
+    world = worlds.Earth(god)
     sys.exit(life.exec_())
 
 if __name__ == '__main__':

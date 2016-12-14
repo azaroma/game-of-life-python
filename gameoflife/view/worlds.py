@@ -1,6 +1,6 @@
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import (QMainWindow, QDesktopWidget, QLabel, QWidget,
-                             QGridLayout)
+                             QGridLayout, qApp, QAction)
 
 class Earth(QMainWindow):
     """ This is where life as we know it lives. It is in charge of
@@ -8,23 +8,90 @@ class Earth(QMainWindow):
     of time.
     """
 
-    def __init__(self, god, state):
+    def __init__(self, god):
         """ Set the initial state of this planet. """
         
         super().__init__()
         self.god = god
         self.timer = QTimer()
+        self.speed = 500
         self.timer.timeout.connect(self.ask_god)
 
-        self.resize(800, 400)
+        self.states = {
+            'still': {
+                'block': [(30,30),(30,31),(31,30),(31,31)],
+                'loaf': [(30,30),(30,31),(31,29),(31,32),(32,30),(32,32),(31,33)],
+                'boat': [(30,30),(30,31),(31,30),(31,32),(32,31)],
+                'tub': [(30,30),(31,29),(31,31),(32,30)]
+            },
+            'osc': {
+                'blinker': [],
+                'toad': [],
+                'beacon': [],
+                'pulsar': [],
+                'penta': []
+            },
+            'ship': {
+                'glider': [],
+                'lwss': []
+            }
+        }
+
+        exit_action = QAction('&Exit', self)
+        exit_action.setShortcut('Ctrl+Q')        
+        exit_action.triggered.connect(qApp.quit)
+        block_action = QAction('&Block', self)
+        block_action.triggered.connect(lambda: self.set_state('still','block'))
+        loaf_action = QAction('&Loaf', self)
+        loaf_action.triggered.connect(lambda: self.set_state('still','loaf'))
+        boat_action = QAction('&Boat', self)
+        boat_action.triggered.connect(lambda: self.set_state('still','boat'))
+        tub_action = QAction('&Tub', self)
+        tub_action.triggered.connect(lambda: self.set_state('still','tub'))
+
+        blinker_action = QAction('&Blinker', self)
+        blinker_action.triggered.connect(lambda: self.set_state('osc','blinker'))
+        toad_action = QAction('&Toad', self)
+        toad_action.triggered.connect(lambda: self.set_state('osc','toad'))
+        beacon_action = QAction('&Peacon', self)
+        beacon_action.triggered.connect(lambda: self.set_state('osc','beacon'))
+        pulsar_action = QAction('&Pulsar', self)
+        pulsar_action.triggered.connect(lambda: self.set_state('osc','pulsar'))
+        penta_action = QAction('&Pentadecathlon', self)
+        penta_action.triggered.connect(lambda: self.set_state('osc','penta'))
+
+        glider_action = QAction('&Glider', self)
+        glider_action.triggered.connect(lambda: self.set_state('ship', 'glider'))
+        lwss_action = QAction('&Lightweight spaceship', self)
+        lwss_action.triggered.connect(lambda: self.set_state('ship', 'lwss'))
+
+        menubar = self.menuBar()
+        main_menu = menubar.addMenu('&Menu')
+        main_menu.addAction(exit_action)
+        still_menu = menubar.addMenu('&Still life')
+        still_menu.addAction(block_action)
+        still_menu.addAction(loaf_action)
+        still_menu.addAction(boat_action)
+        still_menu.addAction(tub_action)
+        oscillator_menu = menubar.addMenu('&Oscillators')
+        oscillator_menu.addAction(blinker_action)
+        oscillator_menu.addAction(toad_action)
+        oscillator_menu.addAction(beacon_action)
+        oscillator_menu.addAction(pulsar_action)
+        oscillator_menu.addAction(penta_action)
+        spaceship_menu = menubar.addMenu('&Spaceships')
+        spaceship_menu.addAction(glider_action)
+        spaceship_menu.addAction(lwss_action)
+
+        self.resize(600, 400)
         self.center()
         self.setWindowTitle("Planet Earth")
 
         self.grid = Grid(self.height(), self.width())
         self.setCentralWidget(self.grid)
 
-        self.set_state(state)
-        self.timer.start(500)
+        self.set_state('still', 'block')
+        self.timer.start(self.speed)
         self.show()
 
     def center(self):
@@ -36,11 +103,20 @@ class Earth(QMainWindow):
         self.move(rect.topLeft())
 
     def ask_god(self):
+        for coor in self.states['still']['block']:
+            print(self.grid.get_cell(coor[0],coor[1]).poll_neighbors())
         self.god.judge(self.grid.get_cells())
 
-    def set_state(self, state):
+    def set_state(self, category, name):
+        self.timer.stop()
+        self.clear_grid()
+        state = self.states[category][name]
         for pos in state:
             self.grid.get_cell(pos[0], pos[1]).resurrect()
+        self.timer.start(self.speed)
+
+    def clear_grid(self):
+        self.grid.clear()
 
 class Grid(QWidget):
     """ Container of cells. """
@@ -50,18 +126,23 @@ class Grid(QWidget):
         cell_size = 10
         self.rows = int(height / cell_size)
         self.cols = int(width / cell_size)
-        rows_index = range(self.rows)
-        cols_index = range(self.cols)
+        self.rows_index = range(self.rows)
+        self.cols_index = range(self.cols)
         
-        self.cells = [[Cell() for c in cols_index]
-                      for r in rows_index]
-        for r in rows_index:
-            for c in cols_index:
+        self.cells = [[Cell() for c in self.cols_index]
+                      for r in self.rows_index]
+        for r in self.rows_index:
+            for c in self.cols_index:
                 self.get_cell(r,c).set_neighbors(self.make_neighbors(r,c))
         self.setup_layout()
 
     def get_cells(self):
         return self.cells
+
+    def clear(self):
+        for r in self.rows_index:
+            for c in self.cols_index:
+                self.get_cell(r,c).die()
 
     def get_cell(self, row, col):
         return self.cells[row][col]
@@ -107,6 +188,7 @@ class Cell(QWidget):
         super().__init__()
         self.label = QLabel()
         self.label.setStyleSheet("QLabel {background-color: black}")
+        self.label.setFixedWidth(16)
         self.alive = False
         self.neighbors = []
         self.will_die = False
@@ -138,11 +220,13 @@ class Cell(QWidget):
         if self.is_alive():
             self.alive = False
             self.will_die = False
+            self.will_resurrect = False
             self.label.setStyleSheet("QLabel {background-color: black}")
 
     def resurrect(self):
         if not self.is_alive():
             self.alive = True
+            self.will_die = False
             self.will_resurrect = False
             self.label.setStyleSheet("QLabel {background-color: white}")
 
