@@ -19,13 +19,14 @@ class God(object):
         
         alive = cell.poll_neighbors()
         if alive < 2:
-            cell.mark_will_die()
+            if cell.is_alive():
+                cell.mark_will_die()
         elif alive > 3:
-            cell.mark_will_die()
+            if cell.is_alive():
+                cell.mark_will_die()
         elif alive == 3:
-            cell.mark_will_resurrect()
-        else:
-            cell.stay()
+            if not cell.is_alive():
+                cell.mark_will_resurrect()
         
     def execute(self, cells):
         for row in cells:

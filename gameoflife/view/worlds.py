@@ -1,6 +1,7 @@
+import view.grid as grid
 from PyQt5.QtCore import QTimer
-from PyQt5.QtWidgets import (QMainWindow, QDesktopWidget, QLabel, QWidget,
-                             QGridLayout, qApp, QAction)
+from PyQt5.QtWidgets import (QMainWindow, QDesktopWidget, QWidget,
+                             qApp, QAction)
 
 class Earth(QMainWindow):
     """ This is where life as we know it lives. It is in charge of
@@ -17,26 +18,45 @@ class Earth(QMainWindow):
         self.speed = 500
         self.timer.timeout.connect(self.ask_god)
 
-        self.states = {
-            'still': {
-                'block': [(30,30),(30,31),(31,30),(31,31)],
-                'loaf': [(30,30),(30,31),(31,29),(31,32),(32,30),(32,32),(33,31)],
-                'boat': [(30,30),(30,31),(31,30),(31,32),(32,31)],
-                'tub': [(30,30),(31,29),(31,31),(32,30)]
-            },
-            'osc': {
-                'blinker': [],
-                'toad': [],
-                'beacon': [],
-                'pulsar': [],
-                'penta': []
-            },
-            'ship': {
-                'glider': [],
-                'lwss': []
-            }
-        }
+        self.build_states()
+        self.build_menu()
+        self.resize(600, 400)
+        self.center()
+        self.setWindowTitle("Planet Earth")
 
+        self.grid = grid.get_grid(self.height(), self.width())
+        self.setCentralWidget(self.grid)
+
+        self.set_state('osc', 'pulsar')
+        self.timer.start(self.speed)
+        self.show()
+
+    def center(self):
+        """ Center the planet in the universe of your screen. """
+            
+        rect = self.geometry()
+        center_point = QDesktopWidget().availableGeometry().center()
+        rect.moveCenter(center_point)
+        self.move(rect.topLeft())
+
+    def ask_god(self):
+#        for coor in self.states['osc']['beacon']:
+#            print(self.grid.get_cell(coor[0],coor[1]).poll_neighbors())
+        self.god.judge(self.grid.get_cells())
+
+    def set_state(self, category, name):
+        self.timer.stop()
+        self.clear_grid()
+        state = self.states[category][name]
+        for pos in state:
+            self.grid.get_cell(pos[0], pos[1]).resurrect()
+        self.timer.start(self.speed)
+
+    def clear_grid(self):
+        self.grid.clear()
+
+    def build_menu(self):
+        
         exit_action = QAction('&Exit', self)
         exit_action.setShortcut('Ctrl+Q')        
         exit_action.triggered.connect(qApp.quit)
@@ -53,7 +73,7 @@ class Earth(QMainWindow):
         blinker_action.triggered.connect(lambda: self.set_state('osc','blinker'))
         toad_action = QAction('&Toad', self)
         toad_action.triggered.connect(lambda: self.set_state('osc','toad'))
-        beacon_action = QAction('&Peacon', self)
+        beacon_action = QAction('&Beacon', self)
         beacon_action.triggered.connect(lambda: self.set_state('osc','beacon'))
         pulsar_action = QAction('&Pulsar', self)
         pulsar_action.triggered.connect(lambda: self.set_state('osc','pulsar'))
@@ -83,162 +103,24 @@ class Earth(QMainWindow):
         spaceship_menu.addAction(glider_action)
         spaceship_menu.addAction(lwss_action)
 
-        self.resize(600, 400)
-        self.center()
-        self.setWindowTitle("Planet Earth")
-
-        self.grid = Grid(self.height(), self.width())
-        self.setCentralWidget(self.grid)
-
-        self.set_state('still', 'block')
-        self.timer.start(self.speed)
-        self.show()
-
-    def center(self):
-        """ Center the planet in the universe of your screen. """
-            
-        rect = self.geometry()
-        center_point = QDesktopWidget().availableGeometry().center()
-        rect.moveCenter(center_point)
-        self.move(rect.topLeft())
-
-    def ask_god(self):
-        for coor in self.states['still']['block']:
-            print(self.grid.get_cell(coor[0],coor[1]).poll_neighbors())
-        self.god.judge(self.grid.get_cells())
-
-    def set_state(self, category, name):
-        self.timer.stop()
-        self.clear_grid()
-        state = self.states[category][name]
-        for pos in state:
-            self.grid.get_cell(pos[0], pos[1]).resurrect()
-        self.timer.start(self.speed)
-
-    def clear_grid(self):
-        self.grid.clear()
-
-class Grid(QWidget):
-    """ Container of cells. """
-
-    def __init__(self, height, width):
-        super().__init__()
-        cell_size = 10
-        self.rows = int(height / cell_size)
-        self.cols = int(width / cell_size)
-        self.rows_index = range(self.rows)
-        self.cols_index = range(self.cols)
+    def build_states(self):
         
-        self.cells = [[Cell() for c in self.cols_index]
-                      for r in self.rows_index]
-        for r in self.rows_index:
-            for c in self.cols_index:
-                self.get_cell(r,c).set_neighbors(self.make_neighbors(r,c))
-        self.setup_layout()
-
-    def get_cells(self):
-        return self.cells
-
-    def clear(self):
-        for r in self.rows_index:
-            for c in self.cols_index:
-                self.get_cell(r,c).die()
-
-    def get_cell(self, row, col):
-        return self.cells[row][col]
-
-    def setup_layout(self):
-        """ Set the widgets in place on the layout. """
-
-        grid_layout = QGridLayout()
-        for r, row in enumerate(self.cells):
-            for c, col in enumerate(self.cells[r]):
-                cell = self.cells[r][c]
-                grid_layout.addWidget(cell.label, r, c)
-        grid_layout.setSpacing(1)
-        self.setLayout(grid_layout)
-
-    def make_neighbors(self, r, c):
-        """Determine neighbors clockwise starting from upper left 
-        """
-
-        neighbors = [None for n in range(8)]
-        if r - 1 >= 0 and c - 1 >= 0:
-            neighbors[0] = self.cells[r - 1][c - 1]
-        if r - 1 >= 0:
-            neighbors[1] = self.cells[r - 1][c]
-        if r - 1 >= 0 and c + 1 < self.cols:
-            neighbors[2] = self.cells[r - 1][c + 1]
-        if c + 1 < self.cols:
-            neighbors[3] = self.cells[r][c + 1]
-        if r + 1 < self.rows and c + 1 < self.cols:
-            neighbors[4] = self.cells[r + 1][c + 1]
-        if r + 1 < self.rows:
-            neighbors[5] = self.cells[r + 1][c]
-        if r + 1 < self.rows and c - 1 >= 0:
-            neighbors[6] = self.cells[r + 1][c - 1]
-        if c - 1 >= 0:
-            neighbors[7] = self.cells[r][c - 1]
-                
-        return neighbors
-
-class Cell(QWidget):
-
-    def __init__(self):
-        super().__init__()
-        self.label = QLabel()
-        self.label.setStyleSheet("QLabel {background-color: black}")
-        self.label.setFixedWidth(16)
-        self.alive = False
-        self.neighbors = []
-        self.will_die = False
-        self.will_resurrect = False
-
-    def set_neighbors(self, neighbors):
-        """ You don't pick your neighbors """
-        
-        self.neighbors = neighbors
-
-    def is_alive(self):
-        """ Are you alive? """
-        
-        return self.alive
-
-    def mark_will_die(self):
-        self.will_die = True
-
-    def mark_will_resurrect(self):
-        self.will_resurrect = True
-
-    def obey(self):
-        if self.will_die:
-            self.die()
-        elif self.will_resurrect:
-            self.resurrect()
-
-    def die(self):
-        if self.is_alive():
-            self.alive = False
-            self.will_die = False
-            self.will_resurrect = False
-            self.label.setStyleSheet("QLabel {background-color: black}")
-
-    def resurrect(self):
-        if not self.is_alive():
-            self.alive = True
-            self.will_die = False
-            self.will_resurrect = False
-            self.label.setStyleSheet("QLabel {background-color: white}")
-
-    def stay(self):
-        pass
-
-    def poll_neighbors(self):
-        """ Ask your neighbors if they are alive """
-        
-        alive = 0
-        for neigh in self.neighbors:
-            if neigh is not None and neigh.is_alive():
-                alive += 1
-
-        return alive
+        self.states = {
+            'still': {
+                'block': [(30,30),(30,31),(31,30),(31,31)],
+                'loaf': [(30,30),(30,31),(31,29),(31,32),(32,30),(32,32),(33,31)],
+                'boat': [(30,30),(30,31),(31,30),(31,32),(32,31)],
+                'tub': [(30,30),(31,29),(31,31),(32,30)]
+            },
+            'osc': {
+                'blinker': [(20,30),(20,31),(20,32)],
+                'toad': [(20,30),(20,31),(20,32),(21,29),(21,30),(21,31)],
+                'beacon': [(20,29),(20,30),(21,29),(22,32),(23,31),(23,32)],
+                'pulsar': [(15,25),(15,26),(15,27),(17,23),(18,23),(19,23),(20,25),(20,26),(20,27),(17,28),(18,28),(19,28),(15,31),(15,32),(15,33),(17,35),(18,35),(19,35),(20,33),(20,32),(20,31),(19,30),(18,30),(17,30),(22,31),(22,32),(22,33),(23,35),(24,35),(25,35),(27,33),(27,32),(27,31),(25,30),(24,30),(23,30),(22,25),(22,26),(22,27),(23,28),(24,28),(25,28),(27,27),(27,26),(27,25),(25,23),(24,23),(23,23)],
+                'penta': []
+            },
+            'ship': {
+                'glider': [],
+                'lwss': []
+            }
+        }
