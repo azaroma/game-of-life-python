@@ -8,19 +8,27 @@ class God(object):
 
     def judge(self, cells):
         """Subject every cell to your mighty judgement. """
+
         for row in cells:
             for cell in row:
                 self.judge_cell(cell)
+        self.execute(cells)
 
     def judge_cell(self, cell):
         """Apply the inevitable rules of life and touch cells. """
         
         alive = cell.poll_neighbors()
         if alive < 2:
-            cell.die()
+            cell.mark_will_die()
         elif alive > 3:
-            cell.die()
+            cell.mark_will_die()
         elif alive == 3:
-            cell.resurrect()
+            cell.mark_will_resurrect()
         else:
             cell.stay()
+        
+    def execute(self, cells):
+        for row in cells:
+            for cell in row:
+                cell.obey()
+        

@@ -8,7 +8,7 @@ class Earth(QMainWindow):
     of time.
     """
 
-    def __init__(self, god):
+    def __init__(self, god, state):
         """ Set the initial state of this planet. """
         
         super().__init__()
@@ -23,7 +23,8 @@ class Earth(QMainWindow):
         self.grid = Grid(self.height(), self.width())
         self.setCentralWidget(self.grid)
 
-        self.timer.start(1000)
+        self.set_state(state)
+        self.timer.start(500)
         self.show()
 
     def center(self):
@@ -36,6 +37,10 @@ class Earth(QMainWindow):
 
     def ask_god(self):
         self.god.judge(self.grid.get_cells())
+
+    def set_state(self, state):
+        for pos in state:
+            self.grid.get_cell(pos[0], pos[1]).resurrect()
 
 class Grid(QWidget):
     """ Container of cells. """
@@ -50,7 +55,9 @@ class Grid(QWidget):
         
         self.cells = [[Cell() for c in cols_index]
                       for r in rows_index]
-        ((self.make_neighbors(r, c) for c in cols_index) for r in rows_index)
+        for r in rows_index:
+            for c in cols_index:
+                self.get_cell(r,c).set_neighbors(self.make_neighbors(r,c))
         self.setup_layout()
 
     def get_cells(self):
@@ -79,15 +86,15 @@ class Grid(QWidget):
             neighbors[0] = self.cells[r - 1][c - 1]
         if r - 1 >= 0:
             neighbors[1] = self.cells[r - 1][c]
-        if r - 1 >= 0 and c + 1 <= self.cols:
+        if r - 1 >= 0 and c + 1 < self.cols:
             neighbors[2] = self.cells[r - 1][c + 1]
-        if c + 1 <= self.cols:
+        if c + 1 < self.cols:
             neighbors[3] = self.cells[r][c + 1]
-        if r + 1 <= self.rows and c + 1 <= self.cols:
+        if r + 1 < self.rows and c + 1 < self.cols:
             neighbors[4] = self.cells[r + 1][c + 1]
-        if r + 1 <= self.rows:
+        if r + 1 < self.rows:
             neighbors[5] = self.cells[r + 1][c]
-        if r + 1 <= self.rows and c - 1 >= 0:
+        if r + 1 < self.rows and c - 1 >= 0:
             neighbors[6] = self.cells[r + 1][c - 1]
         if c - 1 >= 0:
             neighbors[7] = self.cells[r][c - 1]
@@ -102,6 +109,8 @@ class Cell(QWidget):
         self.label.setStyleSheet("QLabel {background-color: black}")
         self.alive = False
         self.neighbors = []
+        self.will_die = False
+        self.will_resurrect = False
 
     def set_neighbors(self, neighbors):
         """ You don't pick your neighbors """
@@ -113,14 +122,28 @@ class Cell(QWidget):
         
         return self.alive
 
+    def mark_will_die(self):
+        self.will_die = True
+
+    def mark_will_resurrect(self):
+        self.will_resurrect = True
+
+    def obey(self):
+        if self.will_die:
+            self.die()
+        elif self.will_resurrect:
+            self.resurrect()
+
     def die(self):
         if self.is_alive():
             self.alive = False
+            self.will_die = False
             self.label.setStyleSheet("QLabel {background-color: black}")
 
     def resurrect(self):
         if not self.is_alive():
             self.alive = True
+            self.will_resurrect = False
             self.label.setStyleSheet("QLabel {background-color: white}")
 
     def stay(self):
@@ -131,7 +154,7 @@ class Cell(QWidget):
         
         alive = 0
         for neigh in self.neighbors:
-            if neigh.isAlive():
+            if neigh is not None and neigh.is_alive():
                 alive += 1
 
         return alive
