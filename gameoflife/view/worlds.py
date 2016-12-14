@@ -11,7 +11,7 @@ class Earth(QMainWindow):
         """ Set the initial state of this planet. """
         
         super().__init__()
-        self.resize(800, 800)
+        self.resize(400, 400)
         self.center()
         self.setWindowTitle("Planet Earth")
 
@@ -36,6 +36,7 @@ class Grid(QWidget):
         cell_size = 10
         rows_index = range(int(height / cell_size))
         cols_index = range(int(width / cell_size))
+        
         self.cells = [[QLabel() for c in cols_index] for r in rows_index]
         self.setup_layout()
 
@@ -49,4 +50,6 @@ class Grid(QWidget):
         for r, row in enumerate(self.cells):
             for c, col in enumerate(self.cells[r]):
                 cell = self.cells[r][c]
+                cell.setStyleSheet("QLabel {background-color: black}")
                 grid_layout.addWidget(cell, r, c)
+        self.setLayout(grid_layout)
