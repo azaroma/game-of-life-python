@@ -15,7 +15,7 @@ class Earth(QMainWindow):
         super().__init__()
         self.god = god
         self.timer = QTimer()
-        self.speed = 500
+        self.speed = 200
         self.timer.timeout.connect(self.ask_god)
 
         self.build_states()
@@ -121,6 +121,6 @@ class Earth(QMainWindow):
             },
             'ship': {
                 'glider': [(18,30),(19,31),(20,31),(20,30),(20,29)],
-                'lwss': []
+                'lwss': [(17,28),(17,31),(18,32),(19,28),(19,32),(20,29),(20,30),(20,31),(20,32)]
             }
         }
