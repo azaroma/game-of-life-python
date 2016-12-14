@@ -20,6 +20,6 @@ class God(object):
         elif alive > 3:
             cell.die()
         elif alive == 3:
-            cell.resurect()
+            cell.resurrect()
         else:
             cell.stay()
